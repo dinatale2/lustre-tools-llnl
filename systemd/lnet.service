@@ -1,0 +1,21 @@
+[Unit]
+Description=lnet Management
+
+Requires=network.target
+Requires=rc-local.service
+
+Before=pacemaker_remote.service
+After=network.target
+After=rc-local.service
+
+ConditionPathExists=!/proc/sys/lnet/
+ConditionPathExists=!/etc/badnode
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/sbin/lnet_manager.sh start
+ExecStop=/sbin/lnet_manager.sh stop
+
+[Install]
+WantedBy=multi-user.target

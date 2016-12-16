@@ -1,0 +1,67 @@
+#!/bin/bash
+# lnet management script
+# used by lnet.service systemd service 
+
+port_release () {
+	# use portrelease to release ports associated with lnet service
+	echo "Releasing ports for the lnet service"
+	[ -x /sbin/portrelease ] && /sbin/portrelease lnet &>/dev/null || :
+}
+
+lnet_start () {
+	port_release
+	# lnet should have an conf file in /etc/modprobe.d/
+	# so we shouldn't need to load routes
+	modprobe lnet || exit 1
+	lctl network up || exit 1
+
+	[ -f /proc/sys/lnet/debug ] && echo "+ha" > /proc/sys/lnet/debug
+}
+
+lnet_stop () {
+	port_release
+	lustre_rmmod ptlrpc || exit 1
+
+	local errmsg=$(/usr/sbin/lctl network down 2>&1)
+	if [ $? -gt 0 ]; then
+		# The following error message means that lnet is already
+		# unconfigured, and the modules are not loaded.
+		echo $errmsg | grep "LNET unconfigure error 19" > /dev/null
+		if [ $? -le 0 ]; then
+			echo "$errmsg"
+			exit 1
+		fi
+	fi
+
+	lustre_rmmod libcfs ldiskfs || exit 1
+}
+
+lnet_restart () {
+	lnet_stop
+	lnet_start
+}
+
+usage () {
+	echo $"Usage: lnet_manager help|start|stop|restart"
+}
+
+case "$1" in
+  start)
+	lnet_start
+	;;
+  stop)
+	lnet_stop
+	;;
+  restart)
+	lnet_restart
+	;;
+  help)
+	usage
+	;;
+  *)
+	usage
+	exit 1
+	;;
+esac
+
+exit 0

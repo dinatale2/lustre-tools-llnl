@@ -47,7 +47,8 @@ AC_CONFIG_FILES([lustre-tools-llnl.spec
                  doc/Makefile
                  doc/man/Makefile
                  src/Makefile
-                 scripts/Makefile])
+                 scripts/Makefile
+                 systemd/Makefile])
 
 
 AC_OUTPUT

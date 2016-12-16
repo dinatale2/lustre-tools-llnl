@@ -11,6 +11,9 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: lustre
 Requires: lustre
 
+%{?systemd_requires}
+BuildRequires: systemd
+
 %description
 
 %prep
@@ -34,6 +37,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/*/*
 %{_prefix}/lib/ocf/resource.d/llnl/lustre
 %{_prefix}/lib/ocf/resource.d/llnl/zpool
+%{_unitdir}/*
+
+%post
+%systemd_post lnet.service
+
+%preun
+%systemd_preun lnet.service
+
+%postun
+%systemd_postun_with_restart lnet.service
 
 %changelog
 * Mon Dec  6 2010 Christopher J. Morrone <morrone@butters.llnl.gov> - tools-llnl
